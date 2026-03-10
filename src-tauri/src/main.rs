@@ -1,7 +1,6 @@
+// Desktop entry point (Windows, Linux, macOS)
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    tauri::Builder::default()
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    zen_des_tages_lib::run();
 }
