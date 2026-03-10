@@ -93,7 +93,7 @@ jobs:
           releaseBody: 'Windows, Linux & Android Build der Zen des Tages App'
           releaseDraft: false
           prerelease: false
-          args: --bundles appimage,deb,rpm
+          args: --bundles deb,rpm
 
   build-portable:
     runs-on: windows-latest
