@@ -5,6 +5,10 @@ description = "Zen Quote of the Day"
 authors = ["Abelssoft"]
 edition = "2021"
 
+[lib]
+name = "zen_des_tages_lib"
+crate-type = ["staticlib", "cdylib"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
