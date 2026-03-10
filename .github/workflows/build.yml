@@ -76,13 +76,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Read version from Cargo.toml
+        id: version
+        run: |
+          VERSION=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/.*= *"\(.*\)"/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=v$VERSION" >> $GITHUB_ENV
+
       - name: Build Tauri app (Linux — AppImage + deb + rpm)
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v1.0.0
-          releaseName: 'Zen des Tages v1.0.0'
+          tagName: v${{ env.VERSION }}
+          releaseName: 'Zen des Tages v${{ env.VERSION }}'
           releaseBody: 'Windows, Linux & Android Build der Zen des Tages App'
           releaseDraft: false
           prerelease: false
@@ -103,10 +110,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android NDK
+      - name: Install Android NDK and build-tools
         run: |
-          sdkmanager "ndk;27.0.12077973"
-          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> $GITHUB_ENV
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            "ndk;27.0.12077973" \
+            "build-tools;34.0.0"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> $GITHUB_ENV
 
       - name: Setup Node.js
@@ -117,12 +125,10 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Add Android Rust targets
+      - name: Add Android Rust targets (ARM only — real devices)
         run: |
           rustup target add aarch64-linux-android
           rustup target add armv7-linux-androideabi
-          rustup target add i686-linux-android
-          rustup target add x86_64-linux-android
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -139,37 +145,42 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > $RUNNER_TEMP/zen-des-tages.keystore
 
-      - name: Build Android APK (unsigned release)
+      - name: Build Android APK (release)
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: npx tauri android build --apk
 
-      - name: Sign APK with keystore
+      - name: Read version and sign APK
         run: |
-          # Find the unsigned APK
-          APK=$(find src-tauri/gen/android -name "*.apk" | head -1)
+          VERSION=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/.*= *"\(.*\)"/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+          # Find release APK specifically
+          APK=$(find src-tauri/gen/android/app/build/outputs/apk/release -name "*.apk" 2>/dev/null | head -1)
+          if [ -z "$APK" ]; then
+            APK=$(find src-tauri/gen/android -name "*.apk" | grep -v debug | head -1)
+          fi
           echo "Found APK: $APK"
 
-          # Get build-tools version dynamically
-          BUILD_TOOLS=$(ls $ANDROID_SDK_ROOT/build-tools/ | sort -V | tail -1)
-          echo "Using build-tools: $BUILD_TOOLS"
+          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/34.0.0"
 
           # Zipalign
-          $ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS/zipalign -v 4 "$APK" app-aligned.apk
+          $BUILD_TOOLS/zipalign -v 4 "$APK" app-aligned.apk
 
-          # Sign with our keystore
-          $ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS/apksigner sign \
+          # Sign
+          $BUILD_TOOLS/apksigner sign \
             --ks $RUNNER_TEMP/zen-des-tages.keystore \
             --ks-key-alias ${{ secrets.ANDROID_KEY_ALIAS }} \
             --ks-pass pass:${{ secrets.ANDROID_STORE_PASSWORD }} \
             --key-pass pass:${{ secrets.ANDROID_KEY_PASSWORD }} \
-            --out ZenDesTages_1.0.0_android.apk \
+            --out ZenDesTages_${VERSION}_android.apk \
             app-aligned.apk
 
-          echo "APK signed successfully"
-          ls -lh ZenDesTages_1.0.0_android.apk
+          echo "APK_FILE=ZenDesTages_${VERSION}_android.apk" >> $GITHUB_ENV
+          ls -lh ZenDesTages_${VERSION}_android.apk
 
       - name: Upload APK to release
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload v1.0.0 ZenDesTages_1.0.0_android.apk --clobber
+        run: gh release upload v${{ env.VERSION }} ${{ env.APK_FILE }} --clobber
