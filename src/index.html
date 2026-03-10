@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zen des Tages</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0a1628 0%, #0d2240 50%, #0a1628 100%);
+      color: white;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      overflow: hidden;
+    }
+    .date {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      color: rgba(255,255,255,0.4);
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo-icon { font-size: 48px; margin-bottom: 8px; }
+    .logo-title {
+      font-size: 20px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .quote-container {
+      max-width: 500px;
+      text-align: center;
+      padding: 0 30px;
+      transition: opacity 0.4s ease;
+    }
+    .quote-container.fade { opacity: 0; }
+    .quote-text {
+      font-size: 22px;
+      line-height: 1.6;
+      font-weight: 300;
+      color: #ffffff;
+      margin-bottom: 20px;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .quote-marks {
+      color: #0066CC;
+      font-size: 60px;
+      line-height: 0;
+      vertical-align: -20px;
+      margin-right: 4px;
+      flex-shrink: 0;
+    }
+    .quote-author {
+      font-size: 14px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 1px;
+      font-style: italic;
+    }
+    .btn {
+      margin-top: 50px;
+      background: linear-gradient(135deg, #0066CC, #0052a3);
+      color: white;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0, 102, 204, 0.4);
+    }
+    .btn:hover {
+      background: linear-gradient(135deg, #0077ee, #0066CC);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(0, 102, 204, 0.6);
+    }
+    .btn:active { transform: translateY(0); }
+    .footer {
+      position: absolute;
+      bottom: 16px;
+      color: rgba(255,255,255,0.2);
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="date" id="date"></div>
+  <div class="logo">
+    <div class="logo-icon">☯</div>
+    <div class="logo-title">Zen des Tages</div>
+  </div>
+  <div class="quote-container" id="container">
+    <div class="quote-text">
+      <span class="quote-marks">"</span>
+      <span id="quote"></span>
+    </div>
+    <div class="quote-author" id="author"></div>
+  </div>
+  <button class="btn" onclick="newQuote()">✦ Neuer Spruch</button>
+  <div class="footer">by Abelssoft</div>
+  <script>
+    const quotes = [
+      { text: "Der Weg ist das Ziel.", author: "Konfuzius" },
+      { text: "Lebe im Augenblick, dann lebst du in der Ewigkeit.", author: "Thoreau" },
+      { text: "Wenn du eilig hast, gehe langsam.", author: "Zen-Weisheit" },
+      { text: "Das Wasser nimmt die Form seines Behälters an. Sei wie Wasser.", author: "Bruce Lee" },
+      { text: "Nicht das Glück macht uns dankbar, sondern die Dankbarkeit macht uns glücklich.", author: "David Steindl-Rast" },
+      { text: "In der Stille findet man sich selbst.", author: "Zen-Weisheit" },
+      { text: "Handle nur nach derjenigen Maxime, durch die du zugleich wollen kannst, dass sie ein allgemeines Gesetz werde.", author: "Kant" },
+      { text: "Der beste Zeitpunkt, einen Baum zu pflanzen, war vor zwanzig Jahren. Der zweitbeste Zeitpunkt ist jetzt.", author: "Chinesisches Sprichwort" },
+      { text: "Wenn der Wind der Veränderung weht, bauen die einen Mauern und die anderen Windmühlen.", author: "Chinesisches Sprichwort" },
+      { text: "Wer mit sich selbst im Einklang ist, der ist es auch mit der Welt.", author: "Zen-Weisheit" },
+      { text: "Das Geheimnis des Lebens ist, dass es kein Geheimnis gibt.", author: "Emerson" },
+      { text: "Sei die Veränderung, die du dir wünschst für diese Welt.", author: "Gandhi" },
+      { text: "Das Glück gehört denen, die zufrieden sind.", author: "Aristoteles" },
+      { text: "Ein stilles Wasser gräbt tiefe Furchen.", author: "Zen-Weisheit" },
+      { text: "Tue gut und rede nicht darüber.", author: "Zen-Weisheit" },
+      { text: "Der kluge Mann deutet auf den Mond. Der Narr schaut auf den Finger.", author: "Zen-Weisheit" },
+      { text: "Was du nicht willst, das man dir tut, das füg auch keinem anderen zu.", author: "Konfuzius" },
+      { text: "Halte es mit dem Kleinen, dann wird dir das Große von selbst kommen.", author: "Laozi" },
+      { text: "Verstehe die anderen, dann bist du weise. Verstehe dich selbst, dann bist du erleuchtet.", author: "Laozi" },
+      { text: "Wer andere kennt, ist klug. Wer sich selbst kennt, ist weise.", author: "Laozi" },
+      { text: "Wenn du deinen Geist ruhig hältst, wird alles klar.", author: "Zen-Weisheit" },
+      { text: "Das Nicht-Handeln ist oft die wirksamste Handlung.", author: "Laozi" },
+      { text: "Ein leerer Geist ist wie ein leeres Gefäß — bereit, gefüllt zu werden.", author: "Zen-Weisheit" },
+      { text: "Lebe einfach, damit andere einfach leben können.", author: "Gandhi" },
+      { text: "Wo Einfachheit ist, da ist Schönheit.", author: "Zen-Weisheit" },
+      { text: "Das Herz eines Menschen ist wie ein Spiegel — es reflektiert, was es sieht.", author: "Zen-Weisheit" },
+      { text: "Geduld ist die stärkste Kraft.", author: "Zen-Weisheit" },
+      { text: "Das Leben ist eine Reise, kein Ziel.", author: "Emerson" },
+      { text: "Wer glücklich ist, macht andere glücklich.", author: "Anne Frank" },
+      { text: "Der Baum, der im Sturm nicht bricht, hat tiefe Wurzeln.", author: "Zen-Weisheit" },
+      { text: "Alles fließt, nichts bleibt.", author: "Heraklit" },
+      { text: "Der Weise spricht nicht viel, aber was er sagt, hat Gewicht.", author: "Konfuzius" },
+      { text: "Beginne, wo du bist. Nutze, was du hast. Tue, was du kannst.", author: "Arthur Ashe" },
+      { text: "Das Geheimnis eines glücklichen Lebens liegt in der Fähigkeit, das Gewöhnliche als außergewöhnlich wahrzunehmen.", author: "Pearl Buck" },
+      { text: "Das Glück ist kein Fisch, den man fangen kann.", author: "Zen-Weisheit" },
+      { text: "Wenn du die Wahrheit siehst, halte sie fest — nicht mit den Händen, sondern mit deinem Herzen.", author: "Zen-Weisheit" },
+      { text: "Verbringe jeden Tag damit, wer du in zehn Jahren sein willst.", author: "Henry David Thoreau" },
+      { text: "Eine Reise von tausend Meilen beginnt mit dem ersten Schritt.", author: "Laozi" },
+      { text: "Drei Dinge können nicht verborgen bleiben: die Sonne, der Mond und die Wahrheit.", author: "Buddha" },
+      { text: "Dein Geist ist ein Garten, deine Gedanken sind die Samen. Du kannst Blumen oder Unkraut säen.", author: "Zen-Weisheit" },
+      { text: "Frieden kommt von innen. Suche ihn nicht außen.", author: "Buddha" },
+      { text: "Das Leben ist zu kurz, um es mit Dingen zu verbringen, die nicht zählen.", author: "Zen-Weisheit" },
+      { text: "Jeder Morgen ist ein neuer Anfang.", author: "Zen-Weisheit" },
+      { text: "Was heute getan werden kann, verschiebe nicht auf morgen.", author: "Konfuzius" },
+      { text: "Halte deinen Geist offen wie den Himmel.", author: "Zen-Weisheit" },
+      { text: "Das Herz, das liebt, ist immer jung.", author: "Griechisches Sprichwort" },
+      { text: "Wenn du weißt, genug ist genug, wirst du immer genug haben.", author: "Laozi" },
+      { text: "Nur wer ruhig ist, kann hören, was das Leben sagt.", author: "Zen-Weisheit" },
+      { text: "Der Geist ist alles. Was du denkst, das wirst du.", author: "Buddha" },
+      { text: "Echte Güte ist wie Wasser, das allen nutzt und nichts begehrt.", author: "Laozi" },
+      { text: "Verändere deine Gedanken und du veränderst deine Welt.", author: "Norman Vincent Peale" },
+      { text: "Das Wissen spricht, aber die Weisheit hört zu.", author: "Jimi Hendrix" },
+      { text: "In der Mitte liegt die Schönheit.", author: "Zen-Weisheit" },
+      { text: "Vergiss nicht zu lächeln — es ist das kürzeste Stück Weg zwischen zwei Menschen.", author: "Victor Borge" },
+      { text: "Sei dankbar für das, was du hast, während du für das arbeitest, was du willst.", author: "Helen Keller" },
+      { text: "Wahre Stärke zeigt sich in der Sanftheit.", author: "Zen-Weisheit" },
+      { text: "Mach die Arbeit, ohne Anerkennung zu suchen.", author: "Zen-Weisheit" },
+      { text: "Der Mond wird nicht gebeten zu scheinen.", author: "Zen-Weisheit" },
+      { text: "Sei klar wie Wasser und tief wie der Ozean.", author: "Zen-Weisheit" },
+      { text: "Das Beste im Menschen ist das, was wir in uns selbst entdecken.", author: "Dostojewski" },
+      { text: "Atme ein, lächle. Atme aus, lächle.", author: "Thich Nhat Hanh" },
+      { text: "Ein Licht anzünden ist besser als die Dunkelheit zu verfluchen.", author: "Konfuzius" },
+      { text: "Das Leben lächelt denen zu, die Freude spenden.", author: "Charlie Chaplin" },
+      { text: "Wenn der Schüler bereit ist, erscheint der Lehrer.", author: "Zen-Weisheit" },
+      { text: "Tue alles mit ganzem Herzen oder gar nicht.", author: "Konfuzius" },
+      { text: "Wo Liebe ist, da ist Gott.", author: "Tolstoi" },
+      { text: "Das Einzige, was wir kontrollieren können, ist unsere Einstellung.", author: "Epiktet" },
+      { text: "Die Wahrheit ist einfach, aber der Weg dorthin ist lang.", author: "Zen-Weisheit" },
+      { text: "Gedanken werden zu Worten, Worte werden zu Taten.", author: "Mutter Teresa" },
+      { text: "Wer den Augenblick ergreift, der ist der rechte Mann.", author: "Goethe" },
+      { text: "Das Licht kommt nur durch die Risse herein.", author: "Leonard Cohen" },
+      { text: "Betrachte den Mond, nicht den Finger, der auf ihn zeigt.", author: "Zen-Weisheit" },
+      { text: "Wenn du aufhörst zu kämpfen und anfängst zu fließen, öffnen sich Türen.", author: "Zen-Weisheit" },
+      { text: "Lass los, was nicht mehr dient.", author: "Zen-Weisheit" },
+      { text: "Ein guter Anfang macht eine gute Hälfte.", author: "Aristoteles" },
+      { text: "Schweigen ist manchmal die beste Antwort.", author: "Dalai Lama" },
+      { text: "Kümmere dich um die Gedanken und die Handlungen werden sich selbst kümmern.", author: "Zen-Weisheit" },
+      { text: "Das Beste kommt, wenn wir aufgehört haben, danach zu suchen.", author: "Zen-Weisheit" },
+      { text: "Vertrauen ist die Grundlage aller Beziehungen.", author: "Konfuzius" },
+      { text: "Schau in die Natur und du wirst alles besser verstehen.", author: "Albert Einstein" },
+      { text: "Lernen ohne nachzudenken ist verlorene Zeit. Nachdenken ohne zu lernen ist gefährlich.", author: "Konfuzius" },
+      { text: "Wer anderen eine Grube gräbt, fällt selbst hinein.", author: "Zen-Weisheit" },
+      { text: "Das Leben blüht nur in der Gegenwart.", author: "Thich Nhat Hanh" },
+      { text: "Wenn du Frieden willst, bereite dich auf Frieden vor.", author: "Zen-Weisheit" },
+      { text: "Tue heute, was andere nicht tun wollen, und du wirst morgen leben, wie andere es nicht können.", author: "Jerry Rice" },
+      { text: "Gut sein ist leichter als man denkt; man muss es nur wollen.", author: "Tolstoi" },
+      { text: "Wasser und Stein — das Weiche überwindet das Harte.", author: "Laozi" },
+      { text: "Das Lächeln kostet nichts, aber gibt viel.", author: "Dale Carnegie" },
+      { text: "Jeder Moment ist einmalig.", author: "Zen-Weisheit" },
+      { text: "Dankbarkeit öffnet die Fülle des Lebens.", author: "Melody Beattie" },
+      { text: "Zu wissen, dass du nicht weißt, ist Weisheit.", author: "Laozi" },
+      { text: "Das Schwierige wird leicht durch Gewohnheit.", author: "Thomas Fuller" },
+      { text: "Denke groß, handle klein.", author: "Zen-Weisheit" },
+      { text: "Die Wurzel des Leidens ist Anhaftung.", author: "Buddha" },
+      { text: "Tue nichts, dann wird nichts ungetan bleiben.", author: "Laozi" },
+      { text: "Der Baum gibt nicht nur Früchte, er gibt auch Schatten.", author: "Zen-Weisheit" },
+      { text: "Sei großzügig ohne Erwartung.", author: "Zen-Weisheit" },
+      { text: "Wenn du glücklich bist, bist du ehrlich.", author: "Oscar Wilde" },
+      { text: "Das einfachste Leben ist das reichste.", author: "Henry David Thoreau" },
+      { text: "Jeder Mensch trägt die Welt in sich.", author: "Marcel Proust" },
+      { text: "Tief atmen. Das Leben geht weiter.", author: "Zen-Weisheit" },
+      { text: "Tue Gutes und vergiss es.", author: "Zen-Weisheit" },
+      { text: "Keine Wolke verdeckt die Sonne für immer.", author: "Zen-Weisheit" },
+      { text: "Auch die längste Reise beginnt mit dem ersten Schritt.", author: "Laozi" },
+      { text: "Das Jetzt ist alles was es gibt.", author: "Eckhart Tolle" },
+      { text: "Halte dir die Schönheit des Lebens vor Augen.", author: "Marcus Aurelius" },
+      { text: "Stille ist die Sprache Gottes.", author: "Rumi" },
+      { text: "Lerne von gestern, lebe für heute, hoffe für morgen.", author: "Einstein" },
+      { text: "Wenn du etwas liebst, lass es frei.", author: "Zen-Weisheit" },
+      { text: "Ein ruhiger Geist bringt innere Kraft und Vertrauen.", author: "Dalai Lama" },
+      { text: "Das Herz weiß Dinge, die der Verstand nicht versteht.", author: "Blaise Pascal" },
+      { text: "Beginne jede Tat, jede Rede, jeden Gedanken im Bewusstsein, dass du bald sterben könntest.", author: "Tolstoi" },
+      { text: "Schönheit liegt im Auge des Betrachters.", author: "Oscar Wilde" },
+      { text: "Ein Tropfen Geduld ist mehr wert als ein Ozean von Verstand.", author: "Arabisches Sprichwort" },
+      { text: "Das Glück ist eine Entscheidung, keine Situation.", author: "Zen-Weisheit" },
+      { text: "Was du säst, das wirst du ernten.", author: "Galater 6,7" },
+      { text: "Einfachheit ist die höchste Form der Raffinesse.", author: "Leonardo da Vinci" },
+      { text: "Die Vergangenheit ist vorbei, die Zukunft noch nicht da — nur dieser Moment ist wirklich.", author: "Zen-Weisheit" },
+      { text: "Wenn du deinen Feinden vergibst, befreist du dich selbst.", author: "Lewis B. Smedes" },
+      { text: "Das Beste, was man für andere tun kann, ist nicht, ihnen seine Reichtümer mitzuteilen, sondern ihnen ihre eigenen zu zeigen.", author: "Goethe" },
+      { text: "Das Universum gibt immer Zeichen. Wir müssen nur lauschen.", author: "Zen-Weisheit" },
+      { text: "Wer kämpft, kann verlieren. Wer nicht kämpft, hat schon verloren.", author: "Brecht" },
+      { text: "Fürchte nicht den langsamen Fortschritt, fürchte das Stillstehen.", author: "Chinesisches Sprichwort" },
+      { text: "Wenn du glücklich sein willst, sei es.", author: "Tolstoi" },
+      { text: "Lass die Welt sein, wie sie ist, und passe dich an.", author: "Marc Aurel" },
+      { text: "Dein Herz weiß den Weg. Lauf in diese Richtung.", author: "Rumi" },
+      { text: "Das Nichts ist voller Möglichkeiten.", author: "Zen-Weisheit" },
+      { text: "Wahres Schweigen ist der Rest des Geistes.", author: "William Penn" },
+      { text: "Handle klug, rede weise, schlafe gut.", author: "Zen-Weisheit" },
+      { text: "Alles hat seine Zeit.", author: "Kohelet 3,1" },
+      { text: "Das Gras ist nie grüner als dort, wo du es gießt.", author: "Zen-Weisheit" },
+      { text: "Freude teilen bedeutet Freude verdoppeln.", author: "Zen-Weisheit" },
+      { text: "Der einzige Unterschied zwischen einem Meister und einem Anfänger ist, dass der Meister mehr Fehler gemacht hat.", author: "Zen-Weisheit" },
+      { text: "Das Aufwachen ist der erste Schritt zur Erleuchtung.", author: "Zen-Weisheit" },
+      { text: "Denke nicht zu viel. Die meisten Dinge verlieren sich beim Nachdenken.", author: "Zen-Weisheit" },
+      { text: "Wer sich kennt, herrscht über sich. Wer sich beherrscht, ist stark.", author: "Laozi" },
+      { text: "Die Zeit ist das, was es gibt — und was wir damit machen ist alles.", author: "Zen-Weisheit" },
+      { text: "Ein Schritt nach vorne ist besser als tausend Pläne.", author: "Zen-Weisheit" },
+      { text: "Das Buch der Natur ist in der Sprache der Mathematik geschrieben.", author: "Galileo Galilei" },
+      { text: "Nichts ist für immer verloren — selbst der Winter kehrt in den Frühling zurück.", author: "Zen-Weisheit" },
+      { text: "Fang dort an, wo du bist.", author: "Arthur Ashe" },
+      { text: "Nur der Unwissende glaubt, alles zu wissen.", author: "Sokrates" },
+      { text: "Der Herbst ist ein zweiter Frühling, in dem jedes Blatt eine Blume ist.", author: "Albert Camus" },
+      { text: "In der Tiefe des Winters entdeckte ich in mir einen unbesiegbaren Sommer.", author: "Albert Camus" },
+      { text: "Tue heute, was morgen nicht möglich ist.", author: "Zen-Weisheit" },
+      { text: "Die Weisheit fängt an, wenn man anfängt, sich zu wundern.", author: "Sokrates" },
+      { text: "Die größte Entdeckung meiner Generation ist, dass man sein Leben verändern kann, indem man seinen Geist verändert.", author: "William James" },
+      { text: "Handle so, als ob das, was du tust, einen Unterschied macht. Das tut es.", author: "William James" },
+      { text: "Sei nicht der Lärm der Welt, sondern die Stille, die darunter liegt.", author: "Zen-Weisheit" },
+      { text: "Das Beste im Leben ist frei.", author: "Zen-Weisheit" },
+      { text: "Du brauchst nichts zu erzwingen. Lass es geschehen.", author: "Zen-Weisheit" },
+      { text: "Das Leben ist der Augenblick, den wir jetzt leben.", author: "Zen-Weisheit" },
+      { text: "Wer jeden Schritt genießt, kommt weiter als wer nur das Ziel sieht.", author: "Zen-Weisheit" },
+      { text: "Ein Freund ist jemand, der die Melodie deines Herzens kennt.", author: "Albert Einstein" },
+      { text: "Sei immer du selbst — außer wenn du ein Bär sein könntest. Sei immer ein Bär.", author: "Zen-Weisheit" },
+      { text: "Zeige mir, womit du beschäftigt bist, und ich sage dir, wer du bist.", author: "Goethe" },
+      { text: "Glück ist kein Ziel, es ist ein Weg.", author: "Zen-Weisheit" },
+      { text: "Das Licht ist nur sichtbar in der Dunkelheit.", author: "Zen-Weisheit" },
+      { text: "Handle mit Gnade, spreche mit Güte, denke mit Mitgefühl.", author: "Zen-Weisheit" },
+      { text: "Geh nicht wohin der Weg führt, geh wohin kein Weg ist und hinterlasse eine Spur.", author: "Ralph Waldo Emerson" },
+      { text: "Die Sterne können nicht ohne Dunkelheit strahlen.", author: "Zen-Weisheit" },
+      { text: "Tue weniger, aber tue es besser.", author: "Zen-Weisheit" },
+      { text: "Wenn du trinkst, trink. Wenn du gehst, geh.", author: "Zen-Weisheit" },
+      { text: "Das Schöne an einem Regentag ist, dass er aufhört.", author: "Zen-Weisheit" },
+      { text: "Lerne zu schweigen. Lass deinen ruhigen Geist hören und absorbieren.", author: "Pythagoras" },
+      { text: "Inmitten von Schwierigkeiten liegt die Chance.", author: "Einstein" },
+      { text: "Ein Tag ohne Lächeln ist ein verlorener Tag.", author: "Charlie Chaplin" },
+      { text: "Das Leben wartet nicht. Nutze es.", author: "Zen-Weisheit" },
+      { text: "Freude ist das einfachste Glück.", author: "Zen-Weisheit" },
+      { text: "Sei ein Leuchtturm, kein Richter.", author: "Zen-Weisheit" },
+      { text: "Das Herz sieht klarer als die Augen.", author: "Zen-Weisheit" },
+      { text: "Wenn du morgens aufwachst, denke daran, was für ein Privileg es ist, zu leben.", author: "Marc Aurel" },
+      { text: "Die Seele, die schaut, verwandelt sich in das, was sie betrachtet.", author: "Plotin" },
+      { text: "Das Leben ist ein Echo — was du aussendest, kommt zurück.", author: "Zen-Weisheit" },
+      { text: "Wähle Liebe, nicht Angst.", author: "Zen-Weisheit" },
+      { text: "Der Frühling kommt nach jedem Winter.", author: "Zen-Weisheit" },
+      { text: "Das, was wir denken, das werden wir.", author: "Buddha" },
+      { text: "Sorge gut für dich selbst, dann kannst du auch für andere sorgen.", author: "Zen-Weisheit" },
+      { text: "Lass die Gedanken kommen und gehen wie Wolken am Himmel.", author: "Zen-Weisheit" },
+      { text: "Jeder Abend ist ein neuer Anfang.", author: "Zen-Weisheit" },
+      { text: "Tue Gutes, so gut du kannst, wann immer du kannst.", author: "John Wesley" },
+      { text: "Das Leben verlangt nicht, dass wir immer das Beste sind — nur dass wir unser Bestes geben.", author: "H. Jackson Brown Jr." },
+      { text: "In jedem von uns schläft ein Riese.", author: "Zen-Weisheit" },
+      { text: "Die Stille ist die Mutter der Weisheit.", author: "Zen-Weisheit" },
+      { text: "Wer sich selbst kennt, braucht keinen Spiegel.", author: "Zen-Weisheit" },
+      { text: "Das Herz hat Gründe, die die Vernunft nicht kennt.", author: "Blaise Pascal" },
+      { text: "Im Anfang war das Wort — und das Wort war Stille.", author: "Zen-Weisheit" },
+      { text: "Jede Erfahrung ist ein Lehrer.", author: "Zen-Weisheit" },
+      { text: "Der Mensch wächst mit seinen Aufgaben.", author: "Friedrich Schiller" },
+      { text: "Wer weint, reinigt seine Seele.", author: "Zen-Weisheit" },
+      { text: "Das Lachen ist die kürzeste Verbindung zwischen zwei Menschen.", author: "Victor Borge" },
+      { text: "Sei das Licht, das du in der Welt sehen möchtest.", author: "Zen-Weisheit" },
+      { text: "Jede Minute, die du ärgerlich bist, verlierst du 60 Sekunden Glück.", author: "Emerson" },
+      { text: "Wer anderen vergibt, schenkt sich selbst Freiheit.", author: "Zen-Weisheit" },
+      { text: "Das Schönste ist das Einfachste.", author: "Zen-Weisheit" },
+      { text: "Nur wer wagt, gewinnt.", author: "Zen-Weisheit" }
+    ];
+
+    function formatDate() {
+      return new Date().toLocaleDateString('de-DE', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function getRandomQuote() {
+      return quotes[Math.floor(Math.random() * quotes.length)];
+    }
+
+    function newQuote() {
+      const container = document.getElementById('container');
+      container.classList.add('fade');
+      setTimeout(() => {
+        const q = getRandomQuote();
+        document.getElementById('quote').textContent = q.text;
+        document.getElementById('author').textContent = '— ' + q.author;
+        container.classList.remove('fade');
+      }, 400);
+    }
+
+    document.getElementById('date').textContent = formatDate();
+    newQuote();
+  </script>
+</body>
+</html>
