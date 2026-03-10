@@ -1,54 +1,34 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Zen des Tages",
+  "version": "1.0.0",
+  "identifier": "de.abelssoft.zen-des-tages",
   "build": {
-    "beforeDevCommand": "",
-    "beforeBuildCommand": "",
-    "devPath": "../src",
-    "distDir": "../src",
-    "withGlobalTauri": false
+    "frontendDist": "../src"
   },
-  "package": {
-    "productName": "Zen des Tages",
-    "version": "1.0.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": [
-        "appimage",
-        "deb",
-        "rpm",
-        "msi",
-        "nsis"
-      ],
-      "identifier": "de.abelssoft.zen-des-tages",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/icon.ico"
-      ]
-    },
-    "security": {
-      "csp": null
-    },
+  "app": {
     "windows": [
       {
-        "fullscreen": false,
-        "resizable": true,
         "title": "Zen des Tages",
         "width": 600,
         "height": 500,
         "minWidth": 400,
         "minHeight": 350,
-        "center": true
+        "center": true,
+        "resizable": true
       }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico"
     ]
   }
 }

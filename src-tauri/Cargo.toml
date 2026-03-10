@@ -3,19 +3,12 @@ name = "zen-des-tages"
 version = "1.0.0"
 description = "Zen Quote of the Day"
 authors = ["Abelssoft"]
-license = ""
-repository = ""
-default-run = "zen-des-tages"
 edition = "2021"
-rust-version = "1.70"
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "1.7", features = ["shell-open"] }
+tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
-[features]
-custom-protocol = ["tauri/custom-protocol"]
