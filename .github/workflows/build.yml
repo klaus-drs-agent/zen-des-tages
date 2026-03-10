@@ -1,4 +1,4 @@
-name: Build Windows + Linux App
+name: Build Windows + Linux + Android
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'Zen des Tages v__VERSION__'
-          releaseBody: 'Windows & Linux Build der Zen des Tages App'
+          releaseBody: 'Windows, Linux & Android Build der Zen des Tages App'
           releaseDraft: false
           prerelease: false
 
@@ -83,7 +83,74 @@ jobs:
         with:
           tagName: v1.0.0
           releaseName: 'Zen des Tages v1.0.0'
-          releaseBody: 'Windows & Linux Build der Zen des Tages App'
+          releaseBody: 'Windows, Linux & Android Build der Zen des Tages App'
           releaseDraft: false
           prerelease: false
           args: --bundles appimage,deb,rpm
+
+  build-android:
+    runs-on: ubuntu-22.04
+    needs: build-windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "ndk;27.0.12077973"
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> $GITHUB_ENV
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add Android Rust targets
+        run: |
+          rustup target add aarch64-linux-android
+          rustup target add armv7-linux-androideabi
+          rustup target add i686-linux-android
+          rustup target add x86_64-linux-android
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Initialize Tauri Android project
+        run: npx tauri android init
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > $RUNNER_TEMP/zen-des-tages.keystore
+
+      - name: Build Android APK (release)
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+        run: |
+          npx tauri android build --apk \
+            --config '{"bundle":{"android":{"signingKey":{"keyAlias":"${{ secrets.ANDROID_KEY_ALIAS }}","keyPassword":"${{ secrets.ANDROID_KEY_PASSWORD }}","storeFile":"${{ runner.temp }}/zen-des-tages.keystore","storePassword":"${{ secrets.ANDROID_STORE_PASSWORD }}"}}}}'
+
+      - name: Upload APK to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APK=$(find src-tauri/gen/android -name "*.apk" -path "*/release/*" | head -1)
+          echo "Found APK: $APK"
+          cp "$APK" "ZenDesTages_1.0.0_android.apk"
+          gh release upload v1.0.0 ZenDesTages_1.0.0_android.apk --clobber
