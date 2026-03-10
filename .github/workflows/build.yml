@@ -95,6 +95,54 @@ jobs:
           prerelease: false
           args: --bundles appimage,deb,rpm
 
+  build-portable:
+    runs-on: windows-latest
+    needs: build-windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Get-Content src-tauri/Cargo.toml | Select-String '^version').ToString().Split('"')[1]
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Build portable binary
+        working-directory: src-tauri
+        run: cargo build --release
+
+      - name: Create portable ZIP
+        shell: pwsh
+        run: |
+          $exePath = "src-tauri\target\release\zen-des-tages.exe"
+          $zipName = "Zen.des.Tages_${{ env.VERSION }}_x64-portable.zip"
+          Compress-Archive -Path $exePath -DestinationPath $zipName
+          echo "Created $zipName"
+
+      - name: Upload portable ZIP to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: gh release upload "v${{ env.VERSION }}" "Zen.des.Tages_${{ env.VERSION }}_x64-portable.zip" --clobber
+
   build-android:
     runs-on: ubuntu-22.04
     needs: build-windows
