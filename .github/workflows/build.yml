@@ -42,7 +42,7 @@ jobs:
           prerelease: false
 
   build-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: build-windows
     steps:
       - uses: actions/checkout@v4
