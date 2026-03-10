@@ -139,18 +139,37 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > $RUNNER_TEMP/zen-des-tages.keystore
 
-      - name: Build Android APK (release)
+      - name: Build Android APK (unsigned release)
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+        run: npx tauri android build --apk
+
+      - name: Sign APK with keystore
         run: |
-          npx tauri android build --apk \
-            --config '{"bundle":{"android":{"signingKey":{"keyAlias":"${{ secrets.ANDROID_KEY_ALIAS }}","keyPassword":"${{ secrets.ANDROID_KEY_PASSWORD }}","storeFile":"${{ runner.temp }}/zen-des-tages.keystore","storePassword":"${{ secrets.ANDROID_STORE_PASSWORD }}"}}}}'
+          # Find the unsigned APK
+          APK=$(find src-tauri/gen/android -name "*.apk" | head -1)
+          echo "Found APK: $APK"
+
+          # Get build-tools version dynamically
+          BUILD_TOOLS=$(ls $ANDROID_SDK_ROOT/build-tools/ | sort -V | tail -1)
+          echo "Using build-tools: $BUILD_TOOLS"
+
+          # Zipalign
+          $ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS/zipalign -v 4 "$APK" app-aligned.apk
+
+          # Sign with our keystore
+          $ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS/apksigner sign \
+            --ks $RUNNER_TEMP/zen-des-tages.keystore \
+            --ks-key-alias ${{ secrets.ANDROID_KEY_ALIAS }} \
+            --ks-pass pass:${{ secrets.ANDROID_STORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.ANDROID_KEY_PASSWORD }} \
+            --out ZenDesTages_1.0.0_android.apk \
+            app-aligned.apk
+
+          echo "APK signed successfully"
+          ls -lh ZenDesTages_1.0.0_android.apk
 
       - name: Upload APK to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          APK=$(find src-tauri/gen/android -name "*.apk" -path "*/release/*" | head -1)
-          echo "Found APK: $APK"
-          cp "$APK" "ZenDesTages_1.0.0_android.apk"
-          gh release upload v1.0.0 ZenDesTages_1.0.0_android.apk --clobber
+        run: gh release upload v1.0.0 ZenDesTages_1.0.0_android.apk --clobber
