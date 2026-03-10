@@ -1,0 +1,46 @@
+name: Build Portable ZIP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-portable:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build release binary (no bundle)
+        working-directory: src-tauri
+        run: cargo build --release
+
+      - name: Create portable ZIP
+        shell: pwsh
+        run: |
+          $exePath = "src-tauri\target\release\zen-des-tages.exe"
+          $zipName = "Zen.des.Tages_1.0.0_x64-portable.zip"
+          Compress-Archive -Path $exePath -DestinationPath $zipName
+          echo "Created $zipName ($(Get-Item $zipName | Select-Object -ExpandProperty Length) bytes)"
+
+      - name: Upload portable ZIP to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload v1.0.0 Zen.des.Tages_1.0.0_x64-portable.zip --clobber
